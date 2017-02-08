@@ -4,14 +4,11 @@ GIT_HASH := $(shell git rev-parse --short HEAD)
 GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 IMAGE_NAME := "dronedeploy/webhealth"
 
-init:
-
-clean:
-
 package:
 	docker build --build-arg GIT_HASH=$(GIT_HASH) -t $(IMAGE_NAME):$(GIT_HASH) .
 
 test:
+	@#no tests
 
 tag:
 	docker tag $(IMAGE_NAME):$(GIT_HASH) $(IMAGE_NAME):$(GIT_BRANCH)
