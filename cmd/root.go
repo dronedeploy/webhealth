@@ -22,9 +22,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -35,15 +35,14 @@ var currentlyHealthy = true
 var heartbeat int
 var grace int
 
-
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "webhealth",
 	Short: "A simple healtchcheck webserver",
-	Long: `A simple healthcheck webserver. It expects an inbound ping within the heartbeat interval.`,
+	Long:  `A simple healthcheck webserver. It expects an inbound ping within the heartbeat interval.`,
 	Run: func(cmd *cobra.Command, args []string) {
-        do()
-    },
+		do()
+	},
 }
 
 // Execute adds all child commands to the root command sets flags appropriately.
@@ -56,17 +55,22 @@ func Execute() {
 }
 
 func init() {
-    RootCmd.Flags().IntVar(&heartbeat, "heartbeat", 10, "heartbeat interval in seconds")
-    RootCmd.Flags().IntVar(&grace, "grace", 3, "number of intervals that can be missed before considered unhealthy")
+	RootCmd.Flags().IntVar(&heartbeat, "heartbeat", 10, "heartbeat interval in seconds")
+	RootCmd.Flags().IntVar(&grace, "grace", 3, "number of intervals that can be missed before considered unhealthy")
 }
 
 func healthcheck(w http.ResponseWriter, r *http.Request) {
-    if currentlyHealthy {
+	if check() {
 		io.WriteString(w, "ok")
 	} else {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		io.WriteString(w, "not ok")
 	}
+}
+
+// returns true if currently healthy
+func check() bool {
+	return time.Now().Before(lastCheckin.Add(time.Duration(heartbeat*grace) * time.Second))
 }
 
 func ping(w http.ResponseWriter, r *http.Request) {
@@ -76,11 +80,9 @@ func ping(w http.ResponseWriter, r *http.Request) {
 
 func updateStatus() {
 	for {
-	    if time.Now().Before(lastCheckin.Add(time.Duration(heartbeat * grace) * time.Second)) {
-		    currentlyHealthy = true
+		if check() {
 			fmt.Println("healthy ", time.Now())
 		} else {
-		    currentlyHealthy = false
 			fmt.Println("not healthy ", time.Now())
 		}
 		time.Sleep(time.Duration(heartbeat) * time.Second)
