@@ -1,4 +1,4 @@
-FROM golang:1.7
+FROM golang:latest
 MAINTAINER DroneDeploy <admin@dronedeploy.com>
 LABEL REPO="https://github.com/dronedeploy/webhealth"
 
